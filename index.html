@@ -2,22 +2,40 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>13U Plus</title>
-<!-- Paste your Apps Script web app link (ends in /exec) in BOTH places marked APP_URL below. -->
-<meta http-equiv="refresh" content="0; url=https://script.google.com/macros/s/AKfycbx_aN76YdHOlXhjQd_2Xs7xNaMtzcvrEVsHpU1mbtqFSVF1b8Sp1wtCuaicl2Lo0bXNxw/exec">
-<script>
-  // Send people on to the team app, keeping anything after "?" (like ?team=13u-plus or ?plan=...).
-  var APP = 'https://script.google.com/macros/s/AKfycbx_aN76YdHOlXhjQd_2Xs7xNaMtzcvrEVsHpU1mbtqFSVF1b8Sp1wtCuaicl2Lo0bXNxw/exec';
-  location.replace(APP + location.search + location.hash);
-</script>
+<!-- Team app page. The Apps Script link (ends in /exec) is in two places below; update both if it ever changes. -->
 <style>
   body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; margin: 0; padding: 48px 16px; text-align: center; color: #16202e; background: #f3f5f8; }
   a { color: #1d58c4; font-weight: 600; }
 </style>
 </head>
 <body>
-  <p>Opening the team app&hellip;</p>
-  <p>If nothing happens, <a href="https://script.google.com/macros/s/AKfycbx_aN76YdHOlXhjQd_2Xs7xNaMtzcvrEVsHpU1mbtqFSVF1b8Sp1wtCuaicl2Lo0bXNxw/exec">tap here</a>.</p>
+  <p id="msg">Opening the team app&hellip;</p>
+  <p id="alt" hidden>Or <a href="https://script.google.com/macros/s/AKfycbx_aN76YdHOlXhjQd_2Xs7xNaMtzcvrEVsHpU1mbtqFSVF1b8Sp1wtCuaicl2Lo0bXNxw/exec">open the Google version</a>.</p>
+<script>
+  // Everything is inside a function so none of these names clash with the app's own.
+  // This page gets the app from Apps Script and shows it here, so Google never opens it in the browser.
+  // That avoids the Safari / several-Google-accounts problem. Everything after "?" (like ?team=13u-plus) is passed along.
+(function () {
+  var APP = 'https://script.google.com/macros/s/AKfycbx_aN76YdHOlXhjQd_2Xs7xNaMtzcvrEVsHpU1mbtqFSVF1b8Sp1wtCuaicl2Lo0bXNxw/exec';
+  var VIEWPORT = '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">';
+  function esc(s) { return String(s || '').replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function show(d) {
+    var h = String(d.html || ''), extra = '';
+    if (!/name=["']?viewport/i.test(h)) extra += VIEWPORT;
+    if (d.title && !/<title/i.test(h)) extra += '<title>' + esc(d.title) + '</title>';
+    if (/<head[^>]*>/i.test(h)) h = h.replace(/<head[^>]*>/i, function (m) { return m + extra; });
+    else h = '<!DOCTYPE html><html><head><meta charset="utf-8">' + extra + '</head><body>' + h + '</body></html>';
+    document.open(); document.write(h); document.close();
+  }
+  function failed() {
+    document.getElementById('msg').textContent = 'The team app didn’t load. Check your connection and refresh the page.';
+    document.getElementById('alt').hidden = false;
+  }
+  var q = location.search ? location.search + '&raw=1' : '?raw=1';
+  fetch(APP + q).then(function (r) { return r.json(); }).then(function (d) { if (d && d.html) show(d); else failed(); }).catch(failed);
+})();
+</script>
 </body>
 </html>
